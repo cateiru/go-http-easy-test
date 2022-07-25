@@ -1,4 +1,4 @@
-package mockhandler
+package mock
 
 import (
 	"io"
