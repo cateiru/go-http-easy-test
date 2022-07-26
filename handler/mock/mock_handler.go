@@ -98,7 +98,7 @@ func NewFormData(path string, data *contents.Multipart, method string) (*MockHan
 
 // Set RemoteAddr
 //
-// default to 192.0.2.0/24 is "TEST-NET" in RFC 5737
+// default to 192.0.2.1:1234 is "TEST-NET" in RFC 5737
 func (c *MockHandler) SetAddr(addr string) {
 	c.R.RemoteAddr = addr
 }

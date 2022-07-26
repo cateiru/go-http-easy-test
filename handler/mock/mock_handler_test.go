@@ -286,3 +286,21 @@ func TestNewMock(t *testing.T) {
 		})
 	})
 }
+
+func TestSetAddr(t *testing.T) {
+	t.Run("default", func(t *testing.T) {
+		m, err := mock.NewMock("", http.MethodGet, "/")
+		require.NoError(t, err)
+
+		require.Equal(t, m.R.RemoteAddr, "192.0.2.1:1234")
+	})
+
+	t.Run("overwrite", func(t *testing.T) {
+		m, err := mock.NewMock("", http.MethodGet, "/")
+		require.NoError(t, err)
+
+		m.SetAddr("203.0.113.0")
+
+		require.Equal(t, m.R.RemoteAddr, "203.0.113.0")
+	})
+}
