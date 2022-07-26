@@ -76,8 +76,8 @@ func NewJson(path string, data any, method string) (*MockHandler, error) {
 	return mock, nil
 }
 
-func NewPostURLEncoded(path string, data url.Values) (*MockHandler, error) {
-	mock, err := NewMock(data.Encode(), http.MethodPost, path)
+func NewURLEncoded(path string, data url.Values, method string) (*MockHandler, error) {
+	mock, err := NewMock(data.Encode(), method, path)
 	if err != nil {
 		return nil, err
 	}
@@ -86,15 +86,12 @@ func NewPostURLEncoded(path string, data url.Values) (*MockHandler, error) {
 	return mock, nil
 }
 
-func NewPostFormData(body string, path string, data contents.Multipart) (*MockHandler, error) {
-	mock, err := NewMock(body, http.MethodPost, path)
+func NewFormData(path string, data *contents.Multipart, method string) (*MockHandler, error) {
+	mock, err := NewMockReader(data.Export(), method, path)
 	if err != nil {
 		return nil, err
 	}
 	mock.R.Header.Add("content-type", data.ContentType())
-
-	b := data.Export().Bytes()
-	mock.R.Body = io.NopCloser(bytes.NewReader(b))
 
 	return mock, nil
 }

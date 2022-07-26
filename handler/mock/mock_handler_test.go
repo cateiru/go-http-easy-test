@@ -6,9 +6,11 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"os"
 	"strings"
 	"testing"
 
+	"github.com/cateiru/go-http-easy-test/contents"
 	"github.com/cateiru/go-http-easy-test/handler/mock"
 	"github.com/stretchr/testify/require"
 )
@@ -193,7 +195,7 @@ func TestNewMock(t *testing.T) {
 
 	t.Run("NewPostURLEncoded", func(t *testing.T) {
 		t.Run("Success get query", func(t *testing.T) {
-			m, err := mock.NewPostURLEncoded("/", url.Values{"hoge": {"huga"}})
+			m, err := mock.NewURLEncoded("/", url.Values{"hoge": {"huga"}}, http.MethodPost)
 			require.NoError(t, err)
 
 			err = m.R.ParseForm()
@@ -203,7 +205,7 @@ func TestNewMock(t *testing.T) {
 		})
 
 		t.Run("multi query", func(t *testing.T) {
-			m, err := mock.NewPostURLEncoded("/", url.Values{"hoge": {"huga"}, "aaa": {"bbb"}})
+			m, err := mock.NewURLEncoded("/", url.Values{"hoge": {"huga"}, "aaa": {"bbb"}}, http.MethodPost)
 			require.NoError(t, err)
 
 			err = m.R.ParseForm()
@@ -214,13 +216,73 @@ func TestNewMock(t *testing.T) {
 		})
 
 		t.Run("empty", func(t *testing.T) {
-			m, err := mock.NewPostURLEncoded("/", url.Values{})
+			m, err := mock.NewURLEncoded("/", url.Values{}, http.MethodPost)
 			require.NoError(t, err)
 
 			err = m.R.ParseForm()
 			require.NoError(t, err)
 
 			require.Equal(t, m.R.Form, url.Values{})
+		})
+	})
+
+	t.Run("NewPostFormData", func(t *testing.T) {
+		t.Run("Success text from", func(t *testing.T) {
+			multipart := contents.NewMultipart()
+			err := multipart.Insert("key", "value")
+			require.NoError(t, err)
+
+			m, err := mock.NewFormData("/", multipart, http.MethodPost)
+			require.NoError(t, err)
+
+			require.Equal(t, m.R.Header.Get("content-type"), multipart.ContentType())
+
+			err = m.R.ParseMultipartForm(32 << 20)
+			require.NoError(t, err)
+
+			require.Equal(t, m.R.FormValue("key"), "value")
+		})
+
+		t.Run("Success multi data", func(t *testing.T) {
+			multipart := contents.NewMultipart()
+			err := multipart.Insert("key", "value")
+			require.NoError(t, err)
+			err = multipart.Insert("aaa", "bbbb")
+			require.NoError(t, err)
+
+			m, err := mock.NewFormData("/", multipart, http.MethodPost)
+			require.NoError(t, err)
+
+			require.Equal(t, m.R.Header.Get("content-type"), multipart.ContentType())
+
+			err = m.R.ParseMultipartForm(32 << 20)
+			require.NoError(t, err)
+
+			require.Equal(t, m.R.FormValue("key"), "value")
+			require.Equal(t, m.R.FormValue("aaa"), "bbbb")
+		})
+
+		t.Run("Success file", func(t *testing.T) {
+			file, err := os.Open("../../README.md")
+			require.NoError(t, err)
+
+			multipart := contents.NewMultipart()
+			err = multipart.InsertFile("file", file)
+			require.NoError(t, err)
+
+			m, err := mock.NewFormData("/", multipart, http.MethodPost)
+			require.NoError(t, err)
+
+			require.Equal(t, m.R.Header.Get("content-type"), multipart.ContentType())
+
+			err = m.R.ParseMultipartForm(32 << 20)
+			require.NoError(t, err)
+
+			formFile, _, err := m.R.FormFile("file")
+			require.NoError(t, err)
+
+			err = formFile.Close()
+			require.NoError(t, err)
 		})
 	})
 }

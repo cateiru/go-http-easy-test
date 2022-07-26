@@ -47,8 +47,6 @@ func TestMultipart(t *testing.T) {
 
 		formData := m.Export().String()
 
-		t.Log(formData)
-
 		rep := regexp.MustCompile(`Content-Disposition: form-data; name="([^"]+)"; filename="([^"]+)"\r?\nContent-Type: ([^\r^\n]+)`)
 		result := rep.FindAllStringSubmatch(formData, -1)
 
