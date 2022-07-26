@@ -52,6 +52,68 @@ func TestURL(t *testing.T) {
 	require.Regexp(t, `http:\/\/.+/aaaaa`, url)
 }
 
+func TestCookie(t *testing.T) {
+	cookie1 := http.Cookie{
+		Name:  "session",
+		Value: "12345",
+	}
+
+	cookie2 := http.Cookie{
+		Name:  "aaaa",
+		Value: "value",
+
+		Secure:   true,
+		HttpOnly: true,
+	}
+
+	t.Run("Success a cookie", func(t *testing.T) {
+		mux := http.NewServeMux()
+		mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+			_, err := r.Cookie("session")
+			if err != nil {
+				w.WriteHeader(400)
+				return
+			}
+		})
+
+		s := server.NewMockServer(mux)
+		defer s.Close()
+
+		s.Cookie([]*http.Cookie{
+			&cookie1,
+		})
+
+		s.GetOK(t, "/")
+	})
+
+	t.Run("Success multi cookies", func(t *testing.T) {
+		mux := http.NewServeMux()
+		mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+			_, err := r.Cookie("session")
+			if err != nil {
+				w.WriteHeader(400)
+				return
+			}
+
+			_, err = r.Cookie("aaaa")
+			if err != nil {
+				w.WriteHeader(400)
+				return
+			}
+		})
+
+		s := server.NewMockServer(mux)
+		defer s.Close()
+
+		s.Cookie([]*http.Cookie{
+			&cookie1,
+			&cookie2,
+		})
+
+		s.GetOK(t, "/")
+	})
+}
+
 func TestGet(t *testing.T) {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", Handler)
@@ -280,7 +342,7 @@ func TestDo(t *testing.T) {
 		s := server.NewMockServer(mux)
 		defer s.Close()
 
-		resp := s.Do(t, "/", http.MethodDelete, nil, func(r *http.Request) {})
+		resp := s.Do(t, "/", http.MethodDelete, nil)
 		resp.Ok(t)
 	})
 }

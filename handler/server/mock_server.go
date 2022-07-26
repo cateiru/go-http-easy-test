@@ -18,18 +18,20 @@ var client = new(http.Client)
 
 type MockServer struct {
 	Server *httptest.Server
+	Header *http.Header
 }
 
-// モックサーバーを起動する
+// Start mock server
 func NewMockServer(handler http.Handler) *MockServer {
 	server := httptest.NewServer(handler)
 
 	return &MockServer{
 		Server: server,
+		Header: &http.Header{},
 	}
 }
 
-// TLSでモックサーバーを起動する
+// Start mock server with TLS mode
 func NewMockTLSServer(handler http.Handler) *MockServer {
 	server := httptest.NewTLSServer(handler)
 
@@ -38,25 +40,32 @@ func NewMockTLSServer(handler http.Handler) *MockServer {
 	}
 }
 
-// サーバーをclose
+// close server
 func (c *MockServer) Close() {
 	c.Server.Close()
 }
 
-// モックサーバー用のURLに変換する
+// convert to mock server url
 func (c *MockServer) URL(path string) string {
 	return c.Server.URL + path
 }
 
-// Getメソッドで取得
-func (c *MockServer) Get(t *testing.T, path string) *Response {
-	resp, err := http.Get(c.URL(path))
-	require.NoError(t, err)
+func (c *MockServer) Cookie(cookies []*http.Cookie) {
+	cookieLists := []string{}
 
-	return NewResponse(resp)
+	for _, cookie := range cookies {
+		cookieLists = append(cookieLists, cookie.String())
+	}
+
+	c.Header.Set("cookie", strings.Join(cookieLists, "; "))
 }
 
-// Getメソッドで取得し、レスポンスステータスが200かどうかを確認する
+// GET Request
+func (c *MockServer) Get(t *testing.T, path string) *Response {
+	return c.Do(t, path, http.MethodGet, nil)
+}
+
+// Get Request and check status 200
 func (c *MockServer) GetOK(t *testing.T, path string) *Response {
 	resp := c.Get(t, path)
 	resp.Ok(t)
@@ -64,19 +73,16 @@ func (c *MockServer) GetOK(t *testing.T, path string) *Response {
 	return resp
 }
 
+// POST Requests
 func (c *MockServer) Post(t *testing.T, path string, contentType string, body io.Reader) *Response {
-	resp, err := http.Post(c.URL(path), contentType, body)
-	require.NoError(t, err)
+	c.Header.Add("Content-Type", contentType)
 
-	return NewResponse(resp)
+	return c.Do(t, path, http.MethodPost, body)
 }
 
 // application/x-www-form-urlencoded
 func (c *MockServer) PostForm(t *testing.T, path string, value url.Values) *Response {
-	resp, err := http.PostForm(c.URL(path), value)
-	require.NoError(t, err)
-
-	return NewResponse(resp)
+	return c.Post(t, path, "application/x-www-form-urlencoded", strings.NewReader(value.Encode()))
 }
 
 // application/json
@@ -103,16 +109,21 @@ func (c *MockServer) PostFormData(t *testing.T, path string, form *contents.Mult
 func (c *MockServer) FormData(t *testing.T, path string, method string, form *contents.Multipart) *Response {
 	body := form.Export()
 
-	return c.Do(t, path, method, body, func(r *http.Request) {
-		r.Header.Add("Content-Type", form.ContentType())
-	})
+	c.Header.Add("Content-Type", form.ContentType())
+
+	return c.Do(t, path, method, body)
 }
 
-func (c *MockServer) Do(t *testing.T, path string, method string, body io.Reader, before func(r *http.Request)) *Response {
+func (c *MockServer) Do(t *testing.T, path string, method string, body io.Reader) *Response {
 	r, err := http.NewRequest(method, c.URL(path), body)
 	require.NoError(t, err)
 
-	before(r)
+	// insert headers
+	for key, values := range *c.Header {
+		for _, value := range values {
+			r.Header.Add(key, value)
+		}
+	}
 
 	resp, err := client.Do(r)
 	require.NoError(t, err)
