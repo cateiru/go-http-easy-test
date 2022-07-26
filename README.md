@@ -4,11 +4,11 @@
 
 A package that wraps `net/http/httptest` and allows you to easily test HTTP Handlers.
 
-- [x] Easy
-- [x] Intuitive
-- [x] Support `application/json`
-- [x] Support `application/x-www-form-urlencoded`
-- [x] Support `multipart/form-data`
+✅ Easy
+✅ Intuitive
+✅ Support `application/json`
+✅ Support `application/x-www-form-urlencoded`
+✅ Support `multipart/form-data`
 
 ## Install
 
