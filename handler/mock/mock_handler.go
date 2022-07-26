@@ -3,10 +3,12 @@ package mock
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"io"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"regexp"
 	"strings"
 	"testing"
 
@@ -19,61 +21,85 @@ type MockHandler struct {
 	R *http.Request
 }
 
-// Create mock objects
+// Create mock objects.
+// if set path is empty, replace to /.
 //
 // Example:
 //
-// ```go
-// mock := NewMock("", http.MethodGet, "/")
-// ````
-func NewMock(body string, method string, path string) *MockHandler {
+// 	m, err := NewMock("", http.MethodGet, "/")
+func NewMock(body string, method string, path string) (*MockHandler, error) {
 	b := strings.NewReader(body)
-	return NewMockByte(b, method, path)
+	return NewMockReader(b, method, path)
 }
 
-// Create mock objects use bytes body
-func NewMockByte(body io.Reader, method string, path string) *MockHandler {
+// Create mock objects use io.Reader body.
+// if set path is empty, replace to /.
+//
+// Example:
+//
+// 	m, err := NewMockReader(strings.NewReader(""), http.MethodGet, "/")
+func NewMockReader(body io.Reader, method string, path string) (*MockHandler, error) {
+	// path case is `/`, `/name`, `https://` and `http://`
+	reg := regexp.MustCompile(`(https?:\/)?\/.*`)
+
+	if path == "" {
+		path = "/"
+	} else if !reg.MatchString(path) {
+		return nil, errors.New("illegal path case. path: " + path)
+	}
+
 	r := httptest.NewRequest(method, path, body)
 	w := httptest.NewRecorder()
 
 	return &MockHandler{
 		W: w,
 		R: r,
-	}
+	}, nil
 }
 
-func NewGet(body string, path string) *MockHandler {
+func NewGet(body string, path string) (*MockHandler, error) {
 	return NewMock(body, http.MethodGet, path)
 }
 
-func NewPostJson(t *testing.T, body string, path string, data any) *MockHandler {
-	mock := NewMock(body, http.MethodPost, path)
+func NewPostJson(body string, path string, data any) (*MockHandler, error) {
+	mock, err := NewMock(body, http.MethodPost, path)
+	if err != nil {
+		return nil, err
+	}
 	mock.R.Header.Add("content-type", "application/json")
 
 	b, err := json.Marshal(data)
-	require.NoError(t, err)
+	if err != nil {
+		return nil, err
+	}
 	mock.R.Body = io.NopCloser(bytes.NewReader(b))
 
-	return mock
+	return mock, nil
 }
 
-func NewPostURLEncoded(body string, path string, data url.Values) *MockHandler {
-	mock := NewMock(body, http.MethodPost, path)
+func NewPostURLEncoded(body string, path string, data url.Values) (*MockHandler, error) {
+	mock, err := NewMock(body, http.MethodPost, path)
+	if err != nil {
+		return nil, err
+	}
 	mock.R.Header.Add("content-type", "application/x-www-form-urlencoded")
 
 	mock.R.PostForm = data
 
-	return mock
+	return mock, nil
 }
 
-func NewPostFormData(body string, path string, data contents.Multipart) *MockHandler {
-	mock := NewMock(body, http.MethodPost, path)
+func NewPostFormData(body string, path string, data contents.Multipart) (*MockHandler, error) {
+	mock, err := NewMock(body, http.MethodPost, path)
+	if err != nil {
+		return nil, err
+	}
 	mock.R.Header.Add("content-type", data.ContentType())
 
 	b := data.Export().Bytes()
 	mock.R.Body = io.NopCloser(bytes.NewReader(b))
 
-	return mock
+	return mock, nil
 }
 
 // Set RemoteAddr
@@ -83,11 +109,15 @@ func (c *MockHandler) SetAddr(addr string) {
 	c.R.RemoteAddr = addr
 }
 
-// Set Host
-//
-// default to example.com
-func (c *MockHandler) SetHost(host string) {
-	c.R.Host = host
+// WIP
+func (c *MockHandler) Cookie(cookies []*http.Cookie) {
+	cookiesStr := ""
+
+	for _, cookie := range cookies {
+		cookiesStr += cookie.String() + " "
+	}
+
+	c.R.Header.Set("cookie", cookiesStr)
 }
 
 // Add handler
