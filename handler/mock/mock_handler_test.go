@@ -26,6 +26,10 @@ type JsonData struct {
 	Nya string `json:"nya"`
 }
 
+func Handler(w http.ResponseWriter, r *http.Request) {
+	w.Write([]byte("OK"))
+}
+
 func TestNewMock(t *testing.T) {
 	successCases := []NewArgs{
 		{
@@ -352,4 +356,48 @@ func TestCookie(t *testing.T) {
 
 		require.Equal(t, getCookie2.Value, cookie2.Value)
 	})
+}
+
+func TestHandler(t *testing.T) {
+	m, err := mock.NewMock("", http.MethodGet, "/")
+	require.NoError(t, err)
+
+	m.Handler(Handler)
+
+	require.Equal(t, m.W.Body.String(), "OK")
+}
+
+func TestOk(t *testing.T) {
+	m, err := mock.NewMock("", http.MethodGet, "/")
+	require.NoError(t, err)
+
+	m.Handler(Handler)
+
+	m.Ok(t)
+}
+
+func TestEqBody(t *testing.T) {
+	m, err := mock.NewMock("", http.MethodGet, "/")
+	require.NoError(t, err)
+
+	m.Handler(Handler)
+
+	m.EqBody(t, "OK")
+}
+
+func TestEqJson(t *testing.T) {
+	data := JsonData{
+		Nya: "aaaa",
+	}
+	b, err := json.Marshal(data)
+	require.NoError(t, err)
+
+	m, err := mock.NewMock("", http.MethodGet, "/")
+	require.NoError(t, err)
+
+	m.Handler(func(w http.ResponseWriter, r *http.Request) {
+		w.Write(b)
+	})
+
+	m.EqJson(t, data)
 }
