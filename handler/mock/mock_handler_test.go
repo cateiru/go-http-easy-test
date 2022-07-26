@@ -342,8 +342,6 @@ func TestCookie(t *testing.T) {
 			&cookie2,
 		})
 
-		t.Log(cookie1.String())
-
 		getCookie1, err := m.R.Cookie("session")
 		require.NoError(t, err)
 
