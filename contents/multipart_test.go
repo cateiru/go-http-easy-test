@@ -21,7 +21,8 @@ func TestMultipart(t *testing.T) {
 		}
 
 		for key, value := range data {
-			m.Insert(t, key, value)
+			err := m.Insert(key, value)
+			require.NoError(t, err)
 		}
 
 		formData := m.Export().String()
@@ -41,7 +42,8 @@ func TestMultipart(t *testing.T) {
 		require.NoError(t, err)
 
 		m := contents.NewMultipart()
-		m.InsertFile(t, "file", file)
+		err = m.InsertFile("file", file)
+		require.NoError(t, err)
 
 		formData := m.Export().String()
 
@@ -60,7 +62,8 @@ func TestMultipart(t *testing.T) {
 	t.Run("content-type", func(t *testing.T) {
 		m := contents.NewMultipart()
 
-		m.Insert(t, "key", "value")
+		err := m.Insert("key", "value")
+		require.NoError(t, err)
 
 		r := regexp.MustCompile(`multipart/form-data; boundary=.+`)
 

@@ -7,9 +7,6 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-	"testing"
-
-	"github.com/stretchr/testify/require"
 )
 
 type Multipart struct {
@@ -27,22 +24,34 @@ func NewMultipart() *Multipart {
 	}
 }
 
-func (c *Multipart) Insert(t *testing.T, key string, value string) {
+func (c *Multipart) Insert(key string, value string) error {
 	b := strings.NewReader(value)
 
 	part, err := c.writer.CreateFormField(key)
-	require.NoError(t, err)
+	if err != nil {
+		return err
+	}
 
 	_, err = io.Copy(part, b)
-	require.NoError(t, err)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
-func (c *Multipart) InsertFile(t *testing.T, key string, file *os.File) {
+func (c *Multipart) InsertFile(key string, file *os.File) error {
 	part, err := c.writer.CreateFormFile(key, filepath.Base(file.Name()))
-	require.NoError(t, err)
+	if err != nil {
+		return err
+	}
 
 	_, err = io.Copy(part, file)
-	require.NoError(t, err)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (c *Multipart) Export() *bytes.Buffer {
