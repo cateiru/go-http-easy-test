@@ -105,13 +105,13 @@ func (c *MockHandler) SetAddr(addr string) {
 
 // WIP
 func (c *MockHandler) Cookie(cookies []*http.Cookie) {
-	cookiesStr := ""
+	cookieLists := []string{}
 
 	for _, cookie := range cookies {
-		cookiesStr += cookie.String() + " "
+		cookieLists = append(cookieLists, cookie.String())
 	}
 
-	c.R.Header.Set("cookie", cookiesStr)
+	c.R.Header.Set("cookie", strings.Join(cookieLists, "; "))
 }
 
 // Add handler

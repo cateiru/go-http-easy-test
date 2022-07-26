@@ -304,3 +304,54 @@ func TestSetAddr(t *testing.T) {
 		require.Equal(t, m.R.RemoteAddr, "203.0.113.0")
 	})
 }
+
+func TestCookie(t *testing.T) {
+	cookie1 := http.Cookie{
+		Name:  "session",
+		Value: "12345",
+	}
+
+	cookie2 := http.Cookie{
+		Name:  "aaaa",
+		Value: "value",
+
+		Secure:   true,
+		HttpOnly: true,
+	}
+
+	t.Run("Success a cookie", func(t *testing.T) {
+		m, err := mock.NewMock("", http.MethodGet, "/")
+		require.NoError(t, err)
+
+		m.Cookie([]*http.Cookie{
+			&cookie1,
+		})
+
+		getCookie, err := m.R.Cookie("session")
+		require.NoError(t, err)
+
+		require.Equal(t, getCookie.Value, cookie1.Value)
+	})
+
+	t.Run("Success multi cookies", func(t *testing.T) {
+		m, err := mock.NewMock("", http.MethodGet, "/")
+		require.NoError(t, err)
+
+		m.Cookie([]*http.Cookie{
+			&cookie1,
+			&cookie2,
+		})
+
+		t.Log(cookie1.String())
+
+		getCookie1, err := m.R.Cookie("session")
+		require.NoError(t, err)
+
+		require.Equal(t, getCookie1.Value, cookie1.Value)
+
+		getCookie2, err := m.R.Cookie("aaaa")
+		require.NoError(t, err)
+
+		require.Equal(t, getCookie2.Value, cookie2.Value)
+	})
+}
