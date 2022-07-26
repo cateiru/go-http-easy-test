@@ -9,6 +9,33 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func TestInsert(t *testing.T) {
+	t.Run("one element", func(t *testing.T) {
+		m := contents.NewMultipart()
+
+		err := m.Insert("key", "value")
+		require.NoError(t, err)
+	})
+
+	t.Run("multi elements", func(t *testing.T) {
+		m := contents.NewMultipart()
+
+		err := m.Insert("key1", "value1")
+		require.NoError(t, err)
+		err = m.Insert("key2", "value2")
+		require.NoError(t, err)
+	})
+
+	t.Run("same keys", func(t *testing.T) {
+		m := contents.NewMultipart()
+
+		err := m.Insert("key", "value1")
+		require.NoError(t, err)
+		err = m.Insert("key", "value2")
+		require.NoError(t, err)
+	})
+}
+
 func TestMultipart(t *testing.T) {
 	t.Run("insert", func(t *testing.T) {
 		m := contents.NewMultipart()
