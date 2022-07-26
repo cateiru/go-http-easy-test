@@ -61,30 +61,27 @@ func NewGet(body string, path string) (*MockHandler, error) {
 	return NewMock(body, http.MethodGet, path)
 }
 
-func NewPostJson(body string, path string, data any) (*MockHandler, error) {
-	mock, err := NewMock(body, http.MethodPost, path)
+func NewJson(path string, data any, method string) (*MockHandler, error) {
+	b, err := json.Marshal(data)
+	if err != nil {
+		return nil, err
+	}
+
+	mock, err := NewMockReader(bytes.NewReader(b), method, path)
 	if err != nil {
 		return nil, err
 	}
 	mock.R.Header.Add("content-type", "application/json")
 
-	b, err := json.Marshal(data)
-	if err != nil {
-		return nil, err
-	}
-	mock.R.Body = io.NopCloser(bytes.NewReader(b))
-
 	return mock, nil
 }
 
-func NewPostURLEncoded(body string, path string, data url.Values) (*MockHandler, error) {
-	mock, err := NewMock(body, http.MethodPost, path)
+func NewPostURLEncoded(path string, data url.Values) (*MockHandler, error) {
+	mock, err := NewMock(data.Encode(), http.MethodPost, path)
 	if err != nil {
 		return nil, err
 	}
 	mock.R.Header.Add("content-type", "application/x-www-form-urlencoded")
-
-	mock.R.PostForm = data
 
 	return mock, nil
 }
