@@ -57,10 +57,12 @@ func NewMockReader(body io.Reader, method string, path string) (*MockHandler, er
 	}, nil
 }
 
+// GET Requests
 func NewGet(body string, path string) (*MockHandler, error) {
 	return NewMock(body, http.MethodGet, path)
 }
 
+// Post json. Use the POST or PUT method.
 func NewJson(path string, data any, method string) (*MockHandler, error) {
 	b, err := json.Marshal(data)
 	if err != nil {
@@ -76,6 +78,8 @@ func NewJson(path string, data any, method string) (*MockHandler, error) {
 	return mock, nil
 }
 
+// application/x-www-form-urlencoded type.
+// Use the POST or PUT method.
 func NewURLEncoded(path string, data url.Values, method string) (*MockHandler, error) {
 	mock, err := NewMock(data.Encode(), method, path)
 	if err != nil {
@@ -86,6 +90,8 @@ func NewURLEncoded(path string, data url.Values, method string) (*MockHandler, e
 	return mock, nil
 }
 
+// multipart/form-data type.
+// Use the POST or PUT method.
 func NewFormData(path string, data *contents.Multipart, method string) (*MockHandler, error) {
 	mock, err := NewMockReader(data.Export(), method, path)
 	if err != nil {
@@ -103,7 +109,7 @@ func (c *MockHandler) SetAddr(addr string) {
 	c.R.RemoteAddr = addr
 }
 
-// WIP
+// Including cookies in the request
 func (c *MockHandler) Cookie(cookies []*http.Cookie) {
 	cookieLists := []string{}
 
