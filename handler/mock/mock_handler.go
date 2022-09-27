@@ -13,6 +13,7 @@ import (
 	"testing"
 
 	"github.com/cateiru/go-http-easy-test/contents"
+	"github.com/labstack/echo/v4"
 	"github.com/stretchr/testify/require"
 )
 
@@ -26,7 +27,7 @@ type MockHandler struct {
 //
 // Example:
 //
-// 	m, err := NewMock("", http.MethodGet, "/")
+//	m, err := NewMock("", http.MethodGet, "/")
 func NewMock(body string, method string, path string) (*MockHandler, error) {
 	b := strings.NewReader(body)
 	return NewMockReader(b, method, path)
@@ -37,7 +38,7 @@ func NewMock(body string, method string, path string) (*MockHandler, error) {
 //
 // Example:
 //
-// 	m, err := NewMockReader(strings.NewReader(""), http.MethodGet, "/")
+//	m, err := NewMockReader(strings.NewReader(""), http.MethodGet, "/")
 func NewMockReader(body io.Reader, method string, path string) (*MockHandler, error) {
 	// path case is `/`, `/name`, `https://` and `http://`
 	reg := regexp.MustCompile(`(https?:\/)?\/.*`)
@@ -123,6 +124,20 @@ func (c *MockHandler) Cookie(cookies []*http.Cookie) {
 // Add handler
 func (c *MockHandler) Handler(hand func(w http.ResponseWriter, r *http.Request)) {
 	hand(c.W, c.R)
+}
+
+// Returns echo context
+// this method is require labstack/echo package.
+//
+// Usage:
+//
+//	c := m.Echo()
+//	c.SetPath("/users/:email")
+//	c.SetParamNames("email")
+//	c.SetParamValues("jon@labstack.com")
+func (c *MockHandler) Echo() echo.Context {
+	e := echo.New()
+	return e.NewContext(c.R, c.W)
 }
 
 // Check if request success

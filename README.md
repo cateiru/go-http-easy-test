@@ -9,6 +9,7 @@ A package that wraps `net/http/httptest` and allows you to easily test HTTP Hand
 ✅ Support `application/json`<br/>
 ✅ Support `application/x-www-form-urlencoded`<br/>
 ✅ Support `multipart/form-data`<br/>
+✅ Support [Echo package](https://echo.labstack.com/)
 ✅ Support cookie<br/>
 
 ## Install
@@ -105,6 +106,10 @@ func Handler(w http.ResponseWriter, r *http.Request) {
     ...do something
 }
 
+func EchoHandler(c echo.Context) error {
+    ...do something
+}
+
 func TestHandler(t *testing.T) {
     // Default
     m, err := mock.NewMock(body, http.MethodGet, "/")
@@ -138,6 +143,10 @@ func TestHandler(t *testing.T) {
 
     // Set handler and run
     m.Handler(Handler)
+
+    // Use echo package
+    echoCtx := m.Echo()
+    err := EchoHandler(echoCtx)
 
     // check response
     m.Ok(t)

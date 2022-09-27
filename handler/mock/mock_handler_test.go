@@ -12,6 +12,7 @@ import (
 
 	"github.com/cateiru/go-http-easy-test/contents"
 	"github.com/cateiru/go-http-easy-test/handler/mock"
+	"github.com/labstack/echo/v4"
 	"github.com/stretchr/testify/require"
 )
 
@@ -28,6 +29,10 @@ type JsonData struct {
 
 func Handler(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("OK"))
+}
+
+func EchoHandler(c echo.Context) error {
+	return c.String(http.StatusOK, "OK")
 }
 
 func TestNewMock(t *testing.T) {
@@ -365,6 +370,15 @@ func TestHandler(t *testing.T) {
 	m.Handler(Handler)
 
 	require.Equal(t, m.W.Body.String(), "OK")
+}
+
+func TestEcho(t *testing.T) {
+	m, err := mock.NewMock("", http.MethodGet, "/")
+	require.NoError(t, err)
+
+	c := m.Echo()
+
+	require.NoError(t, EchoHandler(c))
 }
 
 func TestOk(t *testing.T) {
