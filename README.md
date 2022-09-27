@@ -9,7 +9,7 @@ A package that wraps `net/http/httptest` and allows you to easily test HTTP Hand
 ✅ Support `application/json`<br/>
 ✅ Support `application/x-www-form-urlencoded`<br/>
 ✅ Support `multipart/form-data`<br/>
-✅ Support [Echo package](https://echo.labstack.com/)
+✅ Support [Echo package](https://echo.labstack.com/)<br/>
 ✅ Support cookie<br/>
 
 ## Install
