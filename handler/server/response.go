@@ -44,3 +44,14 @@ func (c *Response) EqJson(t *testing.T, obj any) {
 
 	require.Equal(t, c.Body().Bytes(), bytes)
 }
+
+// Prase json body
+func (c *Response) Json(v any) error {
+	data := c.Body().Bytes()
+	return json.Unmarshal(data, v)
+}
+
+// Returns set-cookie's
+func (c *Response) SetCookies() []*http.Cookie {
+	return c.Resp.Cookies()
+}

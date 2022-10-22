@@ -162,3 +162,19 @@ func (c *MockHandler) EqJson(t *testing.T, obj any) {
 
 	require.Equal(t, c.W.Body.Bytes(), bytes)
 }
+
+// Prase json body
+func (c *MockHandler) Json(v any) error {
+	data := c.W.Body.Bytes()
+	return json.Unmarshal(data, v)
+}
+
+// Returns Set-Cookie headers
+func (c *MockHandler) SetCookies() []*http.Cookie {
+	return c.Response().Cookies()
+}
+
+// Returns response
+func (c *MockHandler) Response() *http.Response {
+	return c.W.Result()
+}

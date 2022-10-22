@@ -88,6 +88,13 @@ func TestHandler(t *testing.T) {
     // Compare response body
     resp.EqBody(t, body)
     resp.EqJson(t, obj)
+
+    // prase response json
+    body := new(JsonType)
+    err := resp.Json(body)
+
+    // returns Set-Cookie headers
+    cookies := resp.SetCookies()
 }
 ```
 
@@ -155,6 +162,16 @@ func TestHandler(t *testing.T) {
     // Compare response body
     m.EqBody(t, body)
     m.EqJson(t, obj)
+
+        // prase response json
+    body := new(JsonType)
+    err := m.Json(body)
+
+    // returns Set-Cookie headers
+    cookies := m.SetCookies()
+
+    // Return http.Response
+    response := m.Response()
 }
 ```
 

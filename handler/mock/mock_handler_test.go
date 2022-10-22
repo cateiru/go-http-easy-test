@@ -415,3 +415,56 @@ func TestEqJson(t *testing.T) {
 
 	m.EqJson(t, data)
 }
+
+func TestJson(t *testing.T) {
+	data := JsonData{
+		Nya: "aaaa",
+	}
+	b, err := json.Marshal(data)
+	require.NoError(t, err)
+
+	m, err := mock.NewMock("", http.MethodGet, "/")
+	require.NoError(t, err)
+
+	m.Handler(func(w http.ResponseWriter, r *http.Request) {
+		w.Write(b)
+	})
+
+	resp := new(JsonData)
+	err = m.Json(resp)
+	require.NoError(t, err)
+
+	require.Equal(t, data, *resp)
+}
+
+func TestSetCookies(t *testing.T) {
+	c := &http.Cookie{
+		Name:  "name",
+		Value: "value",
+	}
+
+	m, err := mock.NewMock("", http.MethodGet, "/")
+	require.NoError(t, err)
+
+	m.Handler(func(w http.ResponseWriter, r *http.Request) {
+		http.SetCookie(w, c)
+	})
+
+	cookies := m.SetCookies()
+
+	require.Len(t, cookies, 1)
+	require.Equal(t, cookies[0].Name, c.Name)
+	require.Equal(t, cookies[0].Value, c.Value)
+}
+
+func TestResponse(t *testing.T) {
+	m, err := mock.NewMock("", http.MethodGet, "/")
+	require.NoError(t, err)
+
+	m.Handler(func(w http.ResponseWriter, r *http.Request) {
+	})
+
+	resp := m.Response()
+
+	require.NotNil(t, resp)
+}

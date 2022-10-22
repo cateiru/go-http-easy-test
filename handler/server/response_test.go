@@ -58,3 +58,46 @@ func TestEqJson(t *testing.T) {
 
 	r.EqJson(t, data)
 }
+
+func TestJson(t *testing.T) {
+	data := JsonData{
+		Nya: "aaaa",
+	}
+	b, err := json.Marshal(data)
+	require.NoError(t, err)
+
+	resp := &http.Response{
+		StatusCode: 200,
+
+		Body: io.NopCloser(bytes.NewReader(b)),
+	}
+	r := server.NewResponse(resp)
+
+	respBody := new(JsonData)
+	err = r.Json(respBody)
+	require.NoError(t, err)
+
+	require.Equal(t, data, *respBody)
+}
+
+func TestSetCookies(t *testing.T) {
+	c := &http.Cookie{
+		Name:  "name",
+		Value: "value",
+	}
+
+	resp := &http.Response{
+		StatusCode: 200,
+
+		Header: http.Header{
+			"Set-Cookie": []string{c.String()},
+		},
+	}
+	r := server.NewResponse(resp)
+
+	cookies := r.SetCookies()
+
+	require.Len(t, cookies, 1)
+	require.Equal(t, cookies[0].Name, c.Name)
+	require.Equal(t, cookies[0].Value, c.Value)
+}
