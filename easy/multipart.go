@@ -1,4 +1,4 @@
-package contents
+package easy
 
 import (
 	"bytes"
@@ -17,13 +17,13 @@ type Multipart struct {
 // Create a new multipart/form-data object
 //
 // Example:
-// 	m := NewMultipart()
-// 	// Insert k-v data
-// 	err := m.Insert("key", "value")
-// 	require.NoError(t, err)
-// 	// Insert files
-// 	err := m.InsertFile("key", file)
 //
+//	m := NewMultipart()
+//	// Insert k-v data
+//	err := m.Insert("key", "value")
+//	require.NoError(t, err)
+//	// Insert files
+//	err := m.InsertFile("key", file)
 func NewMultipart() *Multipart {
 	body := &bytes.Buffer{}
 	writer := multipart.NewWriter(body)
@@ -54,9 +54,10 @@ func (c *Multipart) Insert(key string, value string) error {
 // Add a file objects
 //
 // Example:
-// 	file, err := os.Open("file path")
-// 	require.NoError(t, err)
-// 	m.InsertFile("file", file)
+//
+//	file, err := os.Open("file path")
+//	require.NoError(t, err)
+//	m.InsertFile("file", file)
 func (c *Multipart) InsertFile(key string, file *os.File) error {
 	part, err := c.writer.CreateFormFile(key, filepath.Base(file.Name()))
 	if err != nil {

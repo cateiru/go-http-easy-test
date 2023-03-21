@@ -1,4 +1,4 @@
-package server
+package easy
 
 import (
 	"bytes"
@@ -10,7 +10,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/cateiru/go-http-easy-test/contents"
 	"github.com/stretchr/testify/require"
 )
 
@@ -19,6 +18,8 @@ var client = new(http.Client)
 type MockServer struct {
 	Server *httptest.Server
 	Header *http.Header
+
+	Cookies []string
 }
 
 // Start mock server
@@ -51,13 +52,11 @@ func (c *MockServer) URL(path string) string {
 }
 
 func (c *MockServer) Cookie(cookies []*http.Cookie) {
-	cookieLists := []string{}
-
 	for _, cookie := range cookies {
-		cookieLists = append(cookieLists, cookie.String())
+		c.Cookies = append(c.Cookies, cookie.String())
 	}
 
-	c.Header.Set("cookie", strings.Join(cookieLists, "; "))
+	c.Header.Set("cookie", strings.Join(c.Cookies, "; "))
 }
 
 // GET Request
@@ -101,12 +100,12 @@ func (c *MockServer) PostString(t *testing.T, path string, contentType string, b
 }
 
 // POST multipart/form-data
-func (c *MockServer) PostFormData(t *testing.T, path string, form *contents.Multipart) *Response {
+func (c *MockServer) PostFormData(t *testing.T, path string, form *Multipart) *Response {
 	return c.FormData(t, path, http.MethodPost, form)
 }
 
 // multipart/form-data
-func (c *MockServer) FormData(t *testing.T, path string, method string, form *contents.Multipart) *Response {
+func (c *MockServer) FormData(t *testing.T, path string, method string, form *Multipart) *Response {
 	body := form.Export()
 
 	c.Header.Add("Content-Type", form.ContentType())

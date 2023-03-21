@@ -1,4 +1,4 @@
-package server_test
+package easy_test
 
 import (
 	"bytes"
@@ -9,24 +9,15 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/cateiru/go-http-easy-test/contents"
-	"github.com/cateiru/go-http-easy-test/handler/server"
+	"github.com/cateiru/go-http-easy-test/easy"
 	"github.com/stretchr/testify/require"
 )
-
-type JsonData struct {
-	Nya string `json:"nya"`
-}
-
-func Handler(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("OK"))
-}
 
 func TestNewMockServer(t *testing.T) {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", Handler)
 
-	s := server.NewMockServer(mux)
+	s := easy.NewMockServer(mux)
 	defer s.Close()
 	require.Regexp(t, `http:\/\/.+`, s.Server.URL)
 }
@@ -35,7 +26,7 @@ func TestNewMockTLSServer(t *testing.T) {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", Handler)
 
-	s := server.NewMockTLSServer(mux)
+	s := easy.NewMockTLSServer(mux)
 	defer s.Close()
 	require.Regexp(t, `https:\/\/.+`, s.Server.URL)
 }
@@ -44,7 +35,7 @@ func TestURL(t *testing.T) {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", Handler)
 
-	s := server.NewMockServer(mux)
+	s := easy.NewMockServer(mux)
 	defer s.Close()
 
 	url := s.URL("/aaaaa")
@@ -76,7 +67,7 @@ func TestCookie(t *testing.T) {
 			}
 		})
 
-		s := server.NewMockServer(mux)
+		s := easy.NewMockServer(mux)
 		defer s.Close()
 
 		s.Cookie([]*http.Cookie{
@@ -102,7 +93,7 @@ func TestCookie(t *testing.T) {
 			}
 		})
 
-		s := server.NewMockServer(mux)
+		s := easy.NewMockServer(mux)
 		defer s.Close()
 
 		s.Cookie([]*http.Cookie{
@@ -118,7 +109,7 @@ func TestGet(t *testing.T) {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", Handler)
 
-	s := server.NewMockServer(mux)
+	s := easy.NewMockServer(mux)
 	defer s.Close()
 
 	resp := s.Get(t, "/")
@@ -133,7 +124,7 @@ func TestGetOk(t *testing.T) {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", Handler)
 
-	s := server.NewMockServer(mux)
+	s := easy.NewMockServer(mux)
 	defer s.Close()
 
 	s.GetOK(t, "/")
@@ -149,7 +140,7 @@ func TestPost(t *testing.T) {
 		w.Write(buf.Bytes())
 	})
 
-	s := server.NewMockServer(mux)
+	s := easy.NewMockServer(mux)
 	defer s.Close()
 
 	body := "hello"
@@ -173,7 +164,7 @@ func TestPostFrom(t *testing.T) {
 		w.Write([]byte(value))
 	})
 
-	s := server.NewMockServer(mux)
+	s := easy.NewMockServer(mux)
 	defer s.Close()
 
 	data := url.Values{"key": {"aaaa"}}
@@ -200,7 +191,7 @@ func TestPostJson(t *testing.T) {
 		w.Write([]byte(obj.Nya))
 	})
 
-	s := server.NewMockServer(mux)
+	s := easy.NewMockServer(mux)
 	defer s.Close()
 
 	data := JsonData{
@@ -222,7 +213,7 @@ func TestPostString(t *testing.T) {
 		w.Write(buf.Bytes())
 	})
 
-	s := server.NewMockServer(mux)
+	s := easy.NewMockServer(mux)
 	defer s.Close()
 
 	body := "hello"
@@ -235,7 +226,7 @@ func TestPostString(t *testing.T) {
 
 func TestPostFormData(t *testing.T) {
 	t.Run("value", func(t *testing.T) {
-		m := contents.NewMultipart()
+		m := easy.NewMultipart()
 		err := m.Insert("key", "value")
 		require.NoError(t, err)
 
@@ -252,7 +243,7 @@ func TestPostFormData(t *testing.T) {
 			w.Write([]byte(v))
 		})
 
-		s := server.NewMockServer(mux)
+		s := easy.NewMockServer(mux)
 		defer s.Close()
 
 		resp := s.PostFormData(t, "/", m)
@@ -265,7 +256,7 @@ func TestPostFormData(t *testing.T) {
 		file, err := os.Open("../../README.md")
 		require.NoError(t, err)
 
-		m := contents.NewMultipart()
+		m := easy.NewMultipart()
 		err = m.InsertFile("file", file)
 		require.NoError(t, err)
 
@@ -289,7 +280,7 @@ func TestPostFormData(t *testing.T) {
 			}
 		})
 
-		s := server.NewMockServer(mux)
+		s := easy.NewMockServer(mux)
 		defer s.Close()
 
 		resp := s.PostFormData(t, "/", m)
@@ -298,7 +289,7 @@ func TestPostFormData(t *testing.T) {
 }
 
 func TestFormData(t *testing.T) {
-	m := contents.NewMultipart()
+	m := easy.NewMultipart()
 	err := m.Insert("key", "value")
 	require.NoError(t, err)
 
@@ -320,7 +311,7 @@ func TestFormData(t *testing.T) {
 		w.Write([]byte(v))
 	})
 
-	s := server.NewMockServer(mux)
+	s := easy.NewMockServer(mux)
 	defer s.Close()
 
 	resp := s.FormData(t, "/", http.MethodPut, m)
@@ -339,7 +330,7 @@ func TestDo(t *testing.T) {
 			}
 		})
 
-		s := server.NewMockServer(mux)
+		s := easy.NewMockServer(mux)
 		defer s.Close()
 
 		resp := s.Do(t, "/", http.MethodDelete, nil)

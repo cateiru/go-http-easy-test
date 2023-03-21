@@ -1,4 +1,4 @@
-package mock
+package easy
 
 import (
 	"bytes"
@@ -12,7 +12,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/cateiru/go-http-easy-test/contents"
 	"github.com/labstack/echo/v4"
 	"github.com/stretchr/testify/require"
 )
@@ -20,6 +19,8 @@ import (
 type MockHandler struct {
 	W *httptest.ResponseRecorder
 	R *http.Request
+
+	Cookies []string
 }
 
 // Create mock objects.
@@ -93,7 +94,7 @@ func NewURLEncoded(path string, data url.Values, method string) (*MockHandler, e
 
 // multipart/form-data type.
 // Use the POST or PUT method.
-func NewFormData(path string, data *contents.Multipart, method string) (*MockHandler, error) {
+func NewFormData(path string, data *Multipart, method string) (*MockHandler, error) {
 	mock, err := NewMockReader(data.Export(), method, path)
 	if err != nil {
 		return nil, err
@@ -112,13 +113,12 @@ func (c *MockHandler) SetAddr(addr string) {
 
 // Including cookies in the request
 func (c *MockHandler) Cookie(cookies []*http.Cookie) {
-	cookieLists := []string{}
 
 	for _, cookie := range cookies {
-		cookieLists = append(cookieLists, cookie.String())
+		c.Cookies = append(c.Cookies, cookie.String())
 	}
 
-	c.R.Header.Set("cookie", strings.Join(cookieLists, "; "))
+	c.R.Header.Set("cookie", strings.Join(c.Cookies, "; "))
 }
 
 // Add handler
@@ -177,4 +177,16 @@ func (c *MockHandler) SetCookies() []*http.Cookie {
 // Returns response
 func (c *MockHandler) Response() *http.Response {
 	return c.W.Result()
+}
+
+// Returns set-cookie
+func (c *MockHandler) FindCookie(name string) *http.Cookie {
+	cookies := c.Response().Cookies()
+
+	for _, c := range cookies {
+		if c.Name == name {
+			return c
+		}
+	}
+	return nil
 }

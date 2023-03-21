@@ -1,24 +1,24 @@
-package contents_test
+package easy_test
 
 import (
 	"os"
 	"regexp"
 	"testing"
 
-	"github.com/cateiru/go-http-easy-test/contents"
+	"github.com/cateiru/go-http-easy-test/easy"
 	"github.com/stretchr/testify/require"
 )
 
 func TestInsert(t *testing.T) {
 	t.Run("one element", func(t *testing.T) {
-		m := contents.NewMultipart()
+		m := easy.NewMultipart()
 
 		err := m.Insert("key", "value")
 		require.NoError(t, err)
 	})
 
 	t.Run("multi elements", func(t *testing.T) {
-		m := contents.NewMultipart()
+		m := easy.NewMultipart()
 
 		err := m.Insert("key1", "value1")
 		require.NoError(t, err)
@@ -27,7 +27,7 @@ func TestInsert(t *testing.T) {
 	})
 
 	t.Run("same keys", func(t *testing.T) {
-		m := contents.NewMultipart()
+		m := easy.NewMultipart()
 
 		err := m.Insert("key", "value1")
 		require.NoError(t, err)
@@ -38,7 +38,7 @@ func TestInsert(t *testing.T) {
 
 func TestMultipart(t *testing.T) {
 	t.Run("insert", func(t *testing.T) {
-		m := contents.NewMultipart()
+		m := easy.NewMultipart()
 
 		data := map[string]string{
 			"key":  "value",
@@ -68,7 +68,7 @@ func TestMultipart(t *testing.T) {
 		file, err := os.Open("../README.md")
 		require.NoError(t, err)
 
-		m := contents.NewMultipart()
+		m := easy.NewMultipart()
 		err = m.InsertFile("file", file)
 		require.NoError(t, err)
 
@@ -85,7 +85,7 @@ func TestMultipart(t *testing.T) {
 	})
 
 	t.Run("content-type", func(t *testing.T) {
-		m := contents.NewMultipart()
+		m := easy.NewMultipart()
 
 		err := m.Insert("key", "value")
 		require.NoError(t, err)
