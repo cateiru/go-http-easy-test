@@ -10,7 +10,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/cateiru/go-http-easy-test/easy"
+	"github.com/cateiru/go-http-easy-test/v2/easy"
 	"github.com/labstack/echo/v4"
 	"github.com/stretchr/testify/require"
 )
@@ -86,7 +86,7 @@ func TestNewMock(t *testing.T) {
 	t.Run("NewMock", func(t *testing.T) {
 		for _, c := range successCases {
 			t.Run(c.TestMessage, func(t *testing.T) {
-				m, err := easy.NewMock(c.Body, http.MethodGet, c.Path)
+				m, err := easy.NewMock(c.Path, http.MethodGet, c.Body)
 				require.NoError(t, err)
 
 				// overwrite
@@ -106,7 +106,7 @@ func TestNewMock(t *testing.T) {
 
 		for _, c := range failedCases {
 			t.Run(c.TestMessage, func(t *testing.T) {
-				_, err := easy.NewMock(c.Body, http.MethodGet, c.Path)
+				_, err := easy.NewMock(c.Path, http.MethodGet, c.Body)
 				require.Error(t, err)
 			})
 		}
@@ -115,7 +115,7 @@ func TestNewMock(t *testing.T) {
 	t.Run("NewMockReader", func(t *testing.T) {
 		for _, c := range successCases {
 			t.Run(c.TestMessage, func(t *testing.T) {
-				m, err := easy.NewMockReader(strings.NewReader(c.Body), http.MethodGet, c.Path)
+				m, err := easy.NewMockReader(c.Path, http.MethodGet, strings.NewReader(c.Body))
 				require.NoError(t, err)
 
 				// overwrite
@@ -135,23 +135,10 @@ func TestNewMock(t *testing.T) {
 
 		for _, c := range failedCases {
 			t.Run(c.TestMessage, func(t *testing.T) {
-				_, err := easy.NewMockReader(strings.NewReader(c.Body), http.MethodGet, c.Path)
+				_, err := easy.NewMockReader(c.Path, http.MethodGet, strings.NewReader(c.Body))
 				require.Error(t, err)
 			})
 		}
-	})
-
-	t.Run("NewGet", func(t *testing.T) {
-		m, err := easy.NewGet("", "/")
-		require.NoError(t, err)
-
-		r := httptest.NewRequest(http.MethodGet, "/", strings.NewReader(""))
-		w := httptest.NewRecorder()
-
-		require.Equal(t, m, &easy.MockHandler{
-			R: r,
-			W: w,
-		})
 	})
 
 	t.Run("NewJson", func(t *testing.T) {
@@ -163,7 +150,7 @@ func TestNewMock(t *testing.T) {
 		require.NoError(t, err)
 
 		t.Run("Success case", func(t *testing.T) {
-			m, err := easy.NewJson("/", data, http.MethodPost)
+			m, err := easy.NewJson("/", http.MethodPost, data)
 			require.NoError(t, err)
 
 			r := httptest.NewRequest(http.MethodPost, "/", bytes.NewReader(b))
@@ -184,7 +171,7 @@ func TestNewMock(t *testing.T) {
 		})
 
 		t.Run("empty body", func(t *testing.T) {
-			m, err := easy.NewJson("/", "", http.MethodPost)
+			m, err := easy.NewJson("/", http.MethodPost, "")
 			require.NoError(t, err)
 
 			buf := new(bytes.Buffer)
@@ -195,7 +182,7 @@ func TestNewMock(t *testing.T) {
 
 	t.Run("NewPostURLEncoded", func(t *testing.T) {
 		t.Run("Success get query", func(t *testing.T) {
-			m, err := easy.NewURLEncoded("/", url.Values{"hoge": {"huga"}}, http.MethodPost)
+			m, err := easy.NewURLEncoded("/", http.MethodPost, url.Values{"hoge": {"huga"}})
 			require.NoError(t, err)
 
 			err = m.R.ParseForm()
@@ -205,7 +192,7 @@ func TestNewMock(t *testing.T) {
 		})
 
 		t.Run("multi query", func(t *testing.T) {
-			m, err := easy.NewURLEncoded("/", url.Values{"hoge": {"huga"}, "aaa": {"bbb"}}, http.MethodPost)
+			m, err := easy.NewURLEncoded("/", http.MethodPost, url.Values{"hoge": {"huga"}, "aaa": {"bbb"}})
 			require.NoError(t, err)
 
 			err = m.R.ParseForm()
@@ -216,7 +203,7 @@ func TestNewMock(t *testing.T) {
 		})
 
 		t.Run("empty", func(t *testing.T) {
-			m, err := easy.NewURLEncoded("/", url.Values{}, http.MethodPost)
+			m, err := easy.NewURLEncoded("/", http.MethodPost, url.Values{})
 			require.NoError(t, err)
 
 			err = m.R.ParseForm()
@@ -232,7 +219,7 @@ func TestNewMock(t *testing.T) {
 			err := multipart.Insert("key", "value")
 			require.NoError(t, err)
 
-			m, err := easy.NewFormData("/", multipart, http.MethodPost)
+			m, err := easy.NewFormData("/", http.MethodPost, multipart)
 			require.NoError(t, err)
 
 			require.Equal(t, m.R.Header.Get("content-type"), multipart.ContentType())
@@ -250,7 +237,7 @@ func TestNewMock(t *testing.T) {
 			err = multipart.Insert("aaa", "bbbb")
 			require.NoError(t, err)
 
-			m, err := easy.NewFormData("/", multipart, http.MethodPost)
+			m, err := easy.NewFormData("/", http.MethodPost, multipart)
 			require.NoError(t, err)
 
 			require.Equal(t, m.R.Header.Get("content-type"), multipart.ContentType())
@@ -270,7 +257,7 @@ func TestNewMock(t *testing.T) {
 			err = multipart.InsertFile("file", file)
 			require.NoError(t, err)
 
-			m, err := easy.NewFormData("/", multipart, http.MethodPost)
+			m, err := easy.NewFormData("/", http.MethodPost, multipart)
 			require.NoError(t, err)
 
 			require.Equal(t, m.R.Header.Get("content-type"), multipart.ContentType())
@@ -289,14 +276,14 @@ func TestNewMock(t *testing.T) {
 
 func TestSetAddr(t *testing.T) {
 	t.Run("default", func(t *testing.T) {
-		m, err := easy.NewMock("", http.MethodGet, "/")
+		m, err := easy.NewMock("/", http.MethodGet, "")
 		require.NoError(t, err)
 
 		require.Equal(t, m.R.RemoteAddr, "192.0.2.1:1234")
 	})
 
 	t.Run("overwrite", func(t *testing.T) {
-		m, err := easy.NewMock("", http.MethodGet, "/")
+		m, err := easy.NewMock("/", http.MethodGet, "")
 		require.NoError(t, err)
 
 		m.SetAddr("203.0.113.0")
@@ -320,7 +307,7 @@ func TestMockCookie(t *testing.T) {
 	}
 
 	t.Run("Success a cookie", func(t *testing.T) {
-		m, err := easy.NewMock("", http.MethodGet, "/")
+		m, err := easy.NewMock("/", http.MethodGet, "")
 		require.NoError(t, err)
 
 		m.Cookie([]*http.Cookie{
@@ -334,7 +321,7 @@ func TestMockCookie(t *testing.T) {
 	})
 
 	t.Run("Success multi cookies", func(t *testing.T) {
-		m, err := easy.NewMock("", http.MethodGet, "/")
+		m, err := easy.NewMock("/", http.MethodGet, "")
 		require.NoError(t, err)
 
 		m.Cookie([]*http.Cookie{
@@ -355,7 +342,7 @@ func TestMockCookie(t *testing.T) {
 }
 
 func TestHandler(t *testing.T) {
-	m, err := easy.NewMock("", http.MethodGet, "/")
+	m, err := easy.NewMock("/", http.MethodGet, "")
 	require.NoError(t, err)
 
 	m.Handler(Handler)
@@ -364,7 +351,7 @@ func TestHandler(t *testing.T) {
 }
 
 func TestEcho(t *testing.T) {
-	m, err := easy.NewMock("", http.MethodGet, "/")
+	m, err := easy.NewMock("/", http.MethodGet, "")
 	require.NoError(t, err)
 
 	c := m.Echo()
@@ -373,7 +360,7 @@ func TestEcho(t *testing.T) {
 }
 
 func TestMockOk(t *testing.T) {
-	m, err := easy.NewMock("", http.MethodGet, "/")
+	m, err := easy.NewMock("/", http.MethodGet, "")
 	require.NoError(t, err)
 
 	m.Handler(Handler)
@@ -382,7 +369,7 @@ func TestMockOk(t *testing.T) {
 }
 
 func TestMockEqBody(t *testing.T) {
-	m, err := easy.NewMock("", http.MethodGet, "/")
+	m, err := easy.NewMock("/", http.MethodGet, "")
 	require.NoError(t, err)
 
 	m.Handler(Handler)
@@ -397,7 +384,7 @@ func TestMockEqJson(t *testing.T) {
 	b, err := json.Marshal(data)
 	require.NoError(t, err)
 
-	m, err := easy.NewMock("", http.MethodGet, "/")
+	m, err := easy.NewMock("/", http.MethodGet, "")
 	require.NoError(t, err)
 
 	m.Handler(func(w http.ResponseWriter, r *http.Request) {
@@ -414,7 +401,7 @@ func TestMockJson(t *testing.T) {
 	b, err := json.Marshal(data)
 	require.NoError(t, err)
 
-	m, err := easy.NewMock("", http.MethodGet, "/")
+	m, err := easy.NewMock("/", http.MethodGet, "")
 	require.NoError(t, err)
 
 	m.Handler(func(w http.ResponseWriter, r *http.Request) {
@@ -434,7 +421,7 @@ func TestMockSetCookies(t *testing.T) {
 		Value: "value",
 	}
 
-	m, err := easy.NewMock("", http.MethodGet, "/")
+	m, err := easy.NewMock("/", http.MethodGet, "")
 	require.NoError(t, err)
 
 	m.Handler(func(w http.ResponseWriter, r *http.Request) {
@@ -449,7 +436,7 @@ func TestMockSetCookies(t *testing.T) {
 }
 
 func TestResponse(t *testing.T) {
-	m, err := easy.NewMock("", http.MethodGet, "/")
+	m, err := easy.NewMock("/", http.MethodGet, "")
 	require.NoError(t, err)
 
 	m.Handler(func(w http.ResponseWriter, r *http.Request) {

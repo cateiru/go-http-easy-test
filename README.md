@@ -15,7 +15,7 @@ A package that wraps `net/http/httptest` and allows you to easily test HTTP Hand
 ## Install
 
 ```bash
-go get -u github.com/cateiru/go-http-easy-test
+go get -u github.com/cateiru/go-http-easy-test/v2
 ```
 
 ## Mock

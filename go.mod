@@ -1,4 +1,4 @@
-module github.com/cateiru/go-http-easy-test
+module github.com/cateiru/go-http-easy-test/v2
 
 go 1.20
 

@@ -9,7 +9,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/cateiru/go-http-easy-test/easy"
+	"github.com/cateiru/go-http-easy-test/v2/easy"
 	"github.com/stretchr/testify/require"
 )
 

@@ -29,9 +29,9 @@ type MockHandler struct {
 // Example:
 //
 //	m, err := NewMock("", http.MethodGet, "/")
-func NewMock(body string, method string, path string) (*MockHandler, error) {
+func NewMock(path string, method string, body string) (*MockHandler, error) {
 	b := strings.NewReader(body)
-	return NewMockReader(b, method, path)
+	return NewMockReader(path, method, b)
 }
 
 // Create mock objects use io.Reader body.
@@ -40,7 +40,7 @@ func NewMock(body string, method string, path string) (*MockHandler, error) {
 // Example:
 //
 //	m, err := NewMockReader(strings.NewReader(""), http.MethodGet, "/")
-func NewMockReader(body io.Reader, method string, path string) (*MockHandler, error) {
+func NewMockReader(path string, method string, body io.Reader) (*MockHandler, error) {
 	// path case is `/`, `/name`, `https://` and `http://`
 	reg := regexp.MustCompile(`(https?:\/)?\/.*`)
 
@@ -59,19 +59,14 @@ func NewMockReader(body io.Reader, method string, path string) (*MockHandler, er
 	}, nil
 }
 
-// GET Requests
-func NewGet(body string, path string) (*MockHandler, error) {
-	return NewMock(body, http.MethodGet, path)
-}
-
 // Post json. Use the POST or PUT method.
-func NewJson(path string, data any, method string) (*MockHandler, error) {
+func NewJson(path string, method string, data any) (*MockHandler, error) {
 	b, err := json.Marshal(data)
 	if err != nil {
 		return nil, err
 	}
 
-	mock, err := NewMockReader(bytes.NewReader(b), method, path)
+	mock, err := NewMockReader(path, method, bytes.NewReader(b))
 	if err != nil {
 		return nil, err
 	}
@@ -82,8 +77,8 @@ func NewJson(path string, data any, method string) (*MockHandler, error) {
 
 // application/x-www-form-urlencoded type.
 // Use the POST or PUT method.
-func NewURLEncoded(path string, data url.Values, method string) (*MockHandler, error) {
-	mock, err := NewMock(data.Encode(), method, path)
+func NewURLEncoded(path string, method string, data url.Values) (*MockHandler, error) {
+	mock, err := NewMock(path, method, data.Encode())
 	if err != nil {
 		return nil, err
 	}
@@ -94,8 +89,8 @@ func NewURLEncoded(path string, data url.Values, method string) (*MockHandler, e
 
 // multipart/form-data type.
 // Use the POST or PUT method.
-func NewFormData(path string, data *Multipart, method string) (*MockHandler, error) {
-	mock, err := NewMockReader(data.Export(), method, path)
+func NewFormData(path string, method string, data *Multipart) (*MockHandler, error) {
+	mock, err := NewMockReader(path, method, data.Export())
 	if err != nil {
 		return nil, err
 	}
