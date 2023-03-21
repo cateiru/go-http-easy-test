@@ -253,7 +253,7 @@ func TestPostFormData(t *testing.T) {
 	})
 
 	t.Run("file", func(t *testing.T) {
-		file, err := os.Open("../../README.md")
+		file, err := os.Open("../README.md")
 		require.NoError(t, err)
 
 		m := easy.NewMultipart()

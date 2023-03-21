@@ -263,7 +263,7 @@ func TestNewMock(t *testing.T) {
 		})
 
 		t.Run("Success file", func(t *testing.T) {
-			file, err := os.Open("../../README.md")
+			file, err := os.Open("../README.md")
 			require.NoError(t, err)
 
 			multipart := easy.NewMultipart()
