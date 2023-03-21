@@ -18,9 +18,8 @@ A package that wraps `net/http/httptest` and allows you to easily test HTTP Hand
 go get -u github.com/cateiru/go-http-easy-test
 ```
 
-## `handler` package
+## Mock
 
-The `handler` package provides methods that make it easier to test HTTP Handlers.<br/>
 The user can choose from the following two options.
 
 - Actually start the server using `httptest.NewServer`
@@ -34,7 +33,7 @@ package main_test
 import (
     "testing"
 
-    "github.com/cateiru/go-http-easy-test/handler/server"
+    "github.com/cateiru/go-http-easy-test/easy"
 )
 
 func Handler(w http.ResponseWriter, r *http.Request) {
@@ -46,7 +45,7 @@ func TestHandler(t *testing.T) {
     mux.HandleFunc("/", Handler)
 
     // create server
-    s := server.NewMockServer(mux)
+    s := easy.NewMockServer(mux)
     // Start the server with TLS using:
     // s := server.TestNewMockTLSServer(mux)
     defer s.Close()
@@ -70,7 +69,9 @@ func TestHandler(t *testing.T) {
     resp := s.PostJson(t, "/", obj) // application/json
     resp := s.PostString(t, "/", "text/plain", body)
 
-    // Easily build multipart/form-data using the `contents` package.
+    // Easily build multipart/form-data
+    form := easy.NewMultipart()
+    form.Insert("key", "value")
     resp := s.PostFormData(t, "/", form)
     resp := s.FormData(t, "/", "[method]", form)
 
@@ -106,7 +107,7 @@ package main_test
 import (
     "testing"
 
-    "github.com/cateiru/go-http-easy-test/handler/mock"
+    "github.com/cateiru/go-http-easy-test/easy"
 )
 
 func Handler(w http.ResponseWriter, r *http.Request) {
@@ -119,21 +120,21 @@ func EchoHandler(c echo.Context) error {
 
 func TestHandler(t *testing.T) {
     // Default
-    m, err := mock.NewMock(body, http.MethodGet, "/")
-    m, err := mock.NewMockReader(reader, http.MethodGet, "/")
+    m, err := easy.NewMock(body, http.MethodGet, "/")
+    m, err := easy.NewMockReader(reader, http.MethodGet, "/")
 
     // GET
-    m, err := mock.NewGet(body, "/")
+    m, err := easy.NewGet(body, "/")
 
     // POST or PUT send json
-    m, err := mock.NewJson("/", data, http.MethodPost)
+    m, err := easy.NewJson("/", data, http.MethodPost)
 
     // POST or PUT send x-www-form-urlencoded
-    m, err := mock.NewURLEncoded("/", url, http.MethodPost)
+    m, err := easy.NewURLEncoded("/", url, http.MethodPost)
 
     // POST or PUT send multipart/form-data
     // Easily build multipart/form-data using the `contents` package.
-    m, err := mock.NewFormData("/", multipart, http.MethodPost)
+    m, err := easy.NewFormData("/", multipart, http.MethodPost)
 
 
     // Option: set remote addr
@@ -172,17 +173,16 @@ func TestHandler(t *testing.T) {
 
     // Return http.Response
     response := m.Response()
+
+    // set-cookie
+    cookie := m.FindCookie("name")
 }
 ```
-
-## `contents` package
-
-The `contents` package provides methods that simplify HTTP-related testing.
 
 ### multipart
 
 Easily create `multipart/form-data` requests.<br/>
-This method is also used when submitting with `multipart/form-data` using the `handler` package.
+This method is used when submitting with `multipart/form-data`.
 
 ```go
 package main
@@ -190,12 +190,12 @@ package main
 import (
     "os"
 
-    "github.com/cateiru/go-http-easy-test/contents"
+    "github.com/cateiru/go-http-easy-test/easy"
 )
 
 
 func main() {
-    m := contents.NewMultipart()
+    m := easy.NewMultipart()
 
     // Add a string format form.
     err := m.Insert("key", "value")
