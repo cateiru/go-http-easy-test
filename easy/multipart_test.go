@@ -81,7 +81,27 @@ func TestMultipart(t *testing.T) {
 
 		require.Equal(t, result[0][1], "file")
 		require.Equal(t, result[0][2], "README.md")
-		require.Equal(t, result[0][3], "application/octet-stream")
+		require.Equal(t, result[0][3], "text/plain; charset=utf-8")
+	})
+
+	t.Run("insert image file", func(t *testing.T) {
+		file, err := os.Open("./test_image.png")
+		require.NoError(t, err)
+
+		m := easy.NewMultipart()
+		err = m.InsertFile("file", file)
+		require.NoError(t, err)
+
+		formData := m.Export().String()
+
+		rep := regexp.MustCompile(`Content-Disposition: form-data; name="([^"]+)"; filename="([^"]+)"\r?\nContent-Type: ([^\r^\n]+)`)
+		result := rep.FindAllStringSubmatch(formData, -1)
+
+		require.Len(t, result, 1)
+
+		require.Equal(t, result[0][1], "file")
+		require.Equal(t, result[0][2], "test_image.png")
+		require.Equal(t, result[0][3], "image/png")
 	})
 
 	t.Run("content-type", func(t *testing.T) {
